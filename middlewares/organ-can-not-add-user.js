@@ -5,20 +5,14 @@ module.exports = (req, res, next)=>{
     var organID = 1
 
     var results = connection.query(`
-        SELECT * FROM organization_purchase WHERE org_id = ${organID} AND org_purchase_id = ${req.body.org_purchase_id}
+        SELECT * FROM organization_purchase where users_number > used AND payment_status = 'Done' AND org_id = ${organID}
     `)
 
     if( results.length > 0 ){
         
-        if(results[0].org_purchase_used < results[0].org_purchase_users_number){
-
-            next();
-        }else{
-            res.send( {result: false, msg:"Your organization has defined all its users"})
-        }
+        next();
     }else{
 
-        res.send( {result: false, msg:"This org_purchase_id does not belong to your organization"})
+        res.send( {result: false, msg:"Your organization has defined all its users"})
     }
-
 }
