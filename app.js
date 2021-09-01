@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
+app.use('/registration', require('./routes/registration'));
 app.use('/financial', require('./routes/financial'));
 app.use('/bank', require('./routes/bank'));
 
@@ -30,5 +30,6 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
+// error handler
 
 module.exports = app;
