@@ -7,11 +7,11 @@ var organ_can_not_add_user = require('../middlewares/organ-can-not-add-user'); /
 
 
 
-function increaseOneUsed(organID, org_purchase_id){
+function increaseOneUsed(organID, package_id){
 
     //START => Increase one used field in organization_purchase table In related row
     var organ_purchase_data = connection.query(`
-        SELECT * FROM organization_purchase WHERE org_id = ${organID} AND org_purchase_id = ${org_purchase_id}
+        SELECT * FROM organization_purchase WHERE org_id = ${organID} AND package_id = ${package_id} AND payment_status = 'Done' AND users_number > used
     `)[0]
 
     var used = organ_purchase_data.org_purchase_used + 1 ;
@@ -67,10 +67,24 @@ async function submitToPurchase(purchase_data_obj){
 
 
 
+router.post('/available_packages' ,function(req, res, next) {
+
+    var organID = 1
+    var packages = connection.query(`
+        SELECT * FROM organization_purchase where users_number > used AND payment_status = 'Done' AND org_id = ${organID}
+    `);
+
+    res.send(packages);
+});
+
+
+
+
+
 router.post('/suspended_users' ,function(req, res, next) {
 
     // This route is for those Users who are suspended and have not been assigned a package
-    var organID = 1 ;
+    var organID = 1;
     let suspended_users = connection.query(`
         SELECT *
         FROM users
@@ -118,7 +132,7 @@ router.post('/submit_suspended_user', organ_can_not_add_user , async function(re
 
     // START => prepare data to add in purchase table
     var organ_purchase_data = connection.query(`
-        SELECT * FROM organization_purchase WHERE org_id = ${organID} AND org_purchase_id = ${req.body.org_purchase_id}
+        SELECT * FROM organization_purchase WHERE org_id = ${organID} AND package_id = ${req.body.package_id} AND payment_status = 'Done' AND users_number > used
     `)[0];
 
     
@@ -126,8 +140,8 @@ router.post('/submit_suspended_user', organ_can_not_add_user , async function(re
 
         user_id: req.body.user_id,
         organID: organID,
-        org_month: organ_purchase_data.org_purchase_months,
-        org_package_id: organ_purchase_data.org_package_id,
+        org_month: organ_purchase_data.months,
+        org_package_id: organ_purchase_data.package_id,
         user_price_paid: organID,
         payment_status: "Done"
     }
@@ -140,7 +154,7 @@ router.post('/submit_suspended_user', organ_can_not_add_user , async function(re
     if(res_submit_purchase.result){
         
         //START => Increase one used field in organization_purchase table In related row
-        var increase_one_used = await increaseOneUsed(organID, req.body.org_purchase_id);
+        var increase_one_used = await increaseOneUsed(organID, req.body.package_id);
         //END => Increase one used field in organization_purchase table In related row
 
         if( increase_one_used.result ){
